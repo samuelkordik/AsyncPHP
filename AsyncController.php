@@ -1,8 +1,12 @@
 <?php
 /**
- * AsyncController enables parallel/multithreaded asynchronous
+ * AsyncController enables parallel/pseudo-multithreaded asyncronous
  * processing.
  *
+ * Async works using techniques outlined here:
+ * http://phplens.com/phpeverywhere/?q=node/view/254
+ * It functions through calling a script locally and running it; this runs
+ * these scripts in parallel.
  */
 class AsyncController
 {
@@ -44,7 +48,7 @@ class AsyncController
 	/**
 	 * Sets default values for configuration purposes.
 	 */
-	function __construct($max_number_of_jobs = 5, $min_load = 10, $timeout = 0, $log = 'echo') {
+	function __construct($max_number_of_jobs = 5, $min_load = 20, $timeout = 0, $log = 'echo') {
 		$this->_vars = array(
 			'max_number_of_jobs' => $max_number_of_jobs,
 			'min_load' => $min_load,
@@ -146,7 +150,7 @@ class AsyncController
 				$return++;
 			}
 		} else {
-			$this->LogEntry("Load is $load. Not starting a job yet.<br/>");
+			$this->LogEntry("Load is $load[0]. Not starting a job yet.<br/>");
 		}
 		return $return;
 	}
@@ -186,10 +190,10 @@ class AsyncController
 	 * @return File pointer to stream
 	 */
 	public function StartJobAsync($url, $args = false, $conn_timeout=30, $rw_timeout=86400) {
-		$server = 'localhost';
+		$server = (defined('SERVER_HOST')) ? SERVER_HOST : 'localhost';
 		$url .= ($args) ? '?' .http_build_query($args) : '';
 		$this->LogEntry("Starting job with URL: $url\n");
-		$port = SERVER_PORT;
+		$port = (defined('SERVER_PORT')) ? SERVER_PORT : 80;
 		$errno = '';
 		$errstr = '';
 		$fp = fsockopen($server, $port, $errno, $errstr, $conn_timeout);
